@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Proje Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; margin: 0; padding: 40px; color: #333; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; }
+        .form-group { margin-bottom: 25px; display: flex; gap: 10px; }
+        input[type="text"] { flex: 1; padding: 12px; border: 2px solid #bdc3c7; border-radius: 6px; font-size: 16px; outline: none; }
+        input[type="text"]:focus { border-color: #3498db; }
+        button { padding: 12px 25px; background: #2ecc71; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #27ae60; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
+        th { background-color: #34495e; color: white; }
+        tr:hover { background-color: #f9f9f9; }
+        .hash { font-family: monospace; color: #e74c3c; background: #fadbd8; padding: 2px 6px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>⛓️ Blockchain & Bulut Veri Yönetim Paneli</h1>
+    
+    <div class="form-group">
+        <input type="text" id="dataInput" placeholder="Blockchain'e kazınacak veriyi yazın...">
+        <button onclick="sendData()">Ağa Gönder</button>
+    </div>
+
+    <h2>📜 İşlem Geçmişi (MongoDB Logs)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Yazılan Veri</th>
+                <th>İşlem Fişi (Tx Hash)</th>
+                <th>Gönderen Cüzdan</th>
+            </tr>
+        </thead>
+        <tbody id="txTable">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    // Sayfa açıldığında geçmiş verileri yükle
+    async function loadTransactions() {
+        const response = await fetch('/api/transactions');
+        const data = await response.json();
+        const tableBody = document.getElementById('txTable');
+        tableBody.innerHTML = '';
+        
+        data.forEach(tx => {
+            tableBody.innerHTML += `
+                <tr>
+                    <td><strong>${tx.dataSaved}</strong></td>
+                    <td><span class="hash">${tx.txHash.substring(0, 20)}...</span></td>
+                    <td>${tx.senderAddress.substring(0, 15)}...</td>
+                </tr>
+            `;
+        });
+    }
+
+    // Yeni veri gönderme fonksiyonu
+    async function sendData() {
+        const input = document.getElementById('dataInput');
+        if(!input.value) return alert('Lütfen bir metin girin!');
+        
+        const response = await fetch('/api/save-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: input.value })
+        });
+        
+        if(response.ok) {
+            input.value = '';
+            loadTransactions(); // Tabloyu güncelle
+        } else {
+            alert('İşlem başarısız oldu.');
+        }
+    }
+
+    // İlk açılışta verileri çek
+    loadTransactions();
+</script>
+</body>
+</html>
